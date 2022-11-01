@@ -1,0 +1,299 @@
+# Instruksjoner
+
+Denne oppgaven skal løses interaktivt i RStudio ved å legge inn egen kode og kommentarer. Det ferdige dokumentet lagres med kandidatnummeret som navn `[kandidatnummer]_SOK1004_C5_H22.qmd` og lastes opp på deres GitHub-side. Hvis du har kandidatnummer 43, så vil filen hete `43_SOK1004_C5_H22.qmd`. Påse at koden kjører og at dere kan eksportere besvarelsen til pdf. Lever så lenken til GitHub-repositoriumet i Canvas.
+
+# Bakgrunn, læringsmål
+
+I [seminar 3, oppgave 3](https://uit-sok-1004-h22.github.io/seminar/s3.html) leste dere [kapittel 1 i NOU 2015:1](https://uit-sok-1004-h22.github.io/seminar/NOU%202015_%201%20kap%201%20(prod1).pdf) "Produktivitet - grunnlag for vekst og velferd." I denne oppgaven skal vi oppdatere tall brukt i analysen. Gjennom arbeidet vil dere repetere de grunnleggende ferdighetene i bruk av API, `tidyverse` og `ggplot` som vi har arbeidet med gjennom kurset. Dere vil også få anledning til å reflektere rundt sammenhengene i nasjonalregnskapet og å grave litt i statistikkbanken hos SSB.
+
+# Last inn pakker
+
+```{r}
+# output | false
+rm(list=ls()) 
+library(tidyverse)
+library(rjstat)
+library(httr)
+```
+
+# Oppgave I: Timeverksproduktivitet i markedsrettede fastlandsnæringer
+
+Reproduser en oppdatert versjon av Figur 1.1 "Timeverksproduktivitet, markedsrettede fastlandsnæringer" i rapporten. Her er produktivitet målt som bruttoprodukt i markedsrettet produksjon i Fastlands-Norge per timeverk, utenom bolig.
+
+## Oppgave Ia
+
+Hvorfor trekker Produktivitetskommisjon fra produksjonen av boligtjenester, offentlig etterspørsel, og inntekter fra olje og gass når de beregner produktivitet?
+
+*\[Svar på oppgave Ia her\]*
+
+Olje og gass trekkes fra fordi det er en inntektskilde som varierer veldig på grunn av markedet. Det er derfor lettere å lete etter sammenhenger i økonomien uten denne sektoren, det er også lettere å sammenlikne målingene internasjonalt. Det er først og fremst produktivitetsveksten i fastlandsøkonomien som bestemmer velstanden i Norge. En stor del av produksjonverdien kan være grunnrente.
+
+Det er lagt vekt på makedsrettede fastlandsnæringer fordi produksjonen i offentlig sektor og boligtjenster ikke omsettes i markeder, det gjør at produksjonstallene stort sett er basert på kostnader.
+
+## Oppgave Ib
+
+Skriv kode som bruker en JSON-spørring til å lage en oppdatert versjon av figuren, med observasjoner fra 1996 til 2021. Beregn gjennomsnittlig årlig endring for perioden 1996 - 2005 og, 2005-2013, og 2006 - 2021. Står konklusjonen i rapporten seg?
+
+**Merknad.** Det er tidvis store revisjoner i nasjonalregnskapet. Du må regne med at individuelle tall på årlig endring kan avvike en god del, opp til et halvt prosentpoeng, mens de gjennomsnittlige veksttallene burde avvike noe mindre.
+
+**Tips:** Du henter data på timeverk og bruttoprodukt fra henholdsvis tabell 09174 og 09170.
+
+```{r}
+
+# løs oppgave 1b her
+
+url <- "https://data.ssb.no/api/v0/no/table/09174/"
+
+query <- '{
+  "query": [
+    {
+      "code": "NACE",
+      "selection": {
+        "filter": "vs:NRNaeringPubAgg",
+        "values": [
+          "nr23fn"
+        ]
+      }
+    },
+    {
+      "code": "ContentsCode",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "TimeverkL"
+        ]
+      }
+    },
+    {
+      "code": "Tid",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "1995",
+          "1996",
+          "1997",
+          "1998",
+          "1999",
+          "2000",
+          "2001",
+          "2002",
+          "2003",
+          "2004",
+          "2005",
+          "2006",
+          "2007",
+          "2008",
+          "2009",
+          "2010",
+          "2011",
+          "2012",
+          "2013",
+          "2014",
+          "2015",
+          "2016",
+          "2017",
+          "2018",
+          "2019",
+          "2020",
+          "2021"
+        ]
+      }
+    }
+  ],
+  "response": {
+    "format": "json-stat2"
+  }
+}'
+
+hent_indeks.tmp1 <- url %>%
+  POST(body = query, encode = "json")
+
+df <-  hent_indeks.tmp1 %>%
+  content("text") %>%
+  fromJSONstat() %>%
+  as_tibble()
+
+
+```
+
+```{r}
+
+
+url2 <- "https://data.ssb.no/api/v0/no/table/09170/"
+
+blyat_2 <- '{
+  "query": [
+    {
+      "code": "NACE",
+      "selection": {
+        "filter": "vs:NRNaeringPubAgg",
+        "values": [
+          "pub2X68B",
+          "nr23fn"
+        ]
+      }
+    },
+    {
+      "code": "ContentsCode",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "BNPB2"
+        ]
+      }
+    },
+    {
+      "code": "Tid",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "1995",
+          "1996",
+          "1997",
+          "1998",
+          "1999",
+          "2000",
+          "2001",
+          "2002",
+          "2003",
+          "2004",
+          "2005",
+          "2006",
+          "2007",
+          "2008",
+          "2009",
+          "2010",
+          "2011",
+          "2012",
+          "2013",
+          "2014",
+          "2015",
+          "2016",
+          "2017",
+          "2018",
+          "2019",
+          "2020",
+          "2021"
+        ]
+      }
+    }
+  ],
+  "response": {
+    "format": "json-stat2"
+  }
+}'
+hent_indeks2.tmp <- url2 %>%
+  POST(body = blyat_2, encode = "json")
+
+df2 <-  hent_indeks2.tmp %>%
+  content("text") %>%
+  fromJSONstat() %>%
+  as_tibble()
+```
+
+```{r}
+df74 <- df %>% 
+  rename(var = statistikkvariabel) %>% 
+  rename(verdi = value) #enklere å jobbe med
+```
+
+```{r}
+df70 <- df2 %>% 
+  rename(var = statistikkvariabel) %>% 
+  rename(verdi = value) #enklere å jobbe med
+
+df70_wide <- df70 %>% 
+  pivot_wider(names_from = næring,  #lager en wideformat av data
+              values_from = verdi)
+
+df70_wide <- df70_wide %>% 
+  rename(bolig = `Boligtjenester, egen bolig`) %>% 
+  rename(marked = `¬ Markedsrettet virksomhet Fastlands-Norge`) #enklere å jobbe med
+
+df70_wide <- df70_wide %>% 
+  mutate(marked - bolig) #lager ny celle med rett verdi
+```
+
+```{r}
+
+df74 <- df74 %>% 
+  cbind(timeverk = df70_wide$`marked - bolig`) #legger til kolonne fra annet datasett, lager passende navn
+
+df74 <- df74 %>% 
+  mutate(timeverk_lag = lag(timeverk, n=1L)) %>% 
+  mutate(prosent_timeverk = ((timeverk-timeverk_lag)/timeverk)*100) %>% #prosent av timeverk
+  
+  mutate(verdi_lag = lag(verdi, n=1L)) %>% 
+  mutate(prosent_produkt = ((verdi-verdi_lag)/verdi)*100) %>% #prosent av produkt
+  
+  mutate(rel_pros = prosent_timeverk-prosent_produkt)#timeverk - produkt = arbeidsproduktivitet
+```
+
+```{r}
+
+suppressWarnings(snitt_1 <- df74 %>% 
+  filter(år == 1995:2005) %>% 
+  filter(år >=1996) %>% 
+  mutate(snitt_96_05 = sum(rel_pros)/10)) #regne ut gjennomsnittet mellom årstall
+
+suppressWarnings(snitt_2 <- df74 %>% 
+  filter(år == 1995:2013) %>% 
+  filter(år >= 2005) %>% 
+  mutate(snitt_05_13 = sum(rel_pros)/9))
+
+suppressWarnings(snitt_3 <- df74 %>% 
+  filter(år == 1995:2021) %>% 
+  filter(år >= 2006) %>% 
+  mutate(snitt_14_21 = sum(rel_pros)/16))
+
+
+#printe ut gjennomsnittet for de tre års periodene.
+print(paste("Snittet fra 1996 til 2005 er", snitt_1[1,11], "Snittet for 2005 til 2013 er", snitt_2[1,11],"Snittet for 2006 til 2021 er", snitt_3[1,11],"."))
+
+
+```
+
+```{r}
+#Figur tilnærmet lik figur 1.1 i Produktivitetkommisjonens rapport fra 2015. inkludert nye data fra 2013 til 2021
+df74 %>%
+  filter(år >= 1996) %>%
+ggplot(aes(x=år, y=rel_pros)) +         #plott
+  geom_col(fill = "red", alpha = 0.5) + #kolonnediagram
+  geom_hline(yintercept=0, size=0.5) +  #midlinje
+  
+  
+  #plotter snitt linjene
+  geom_segment(aes(x=00,xend=10,y=snitt_1[1,11],yend=snitt_1[1,11]), size=1) +
+  geom_segment(aes(x=11,xend=18,y=snitt_2[1,11],yend=snitt_2[1,11]), size=1) + 
+  geom_segment(aes(x=12,xend=26,y=snitt_3[1,11],yend=snitt_3[1,11]), size=1) +
+  
+  
+  #Legger til y verdier positive og negative
+  scale_y_continuous(sec.axis=dup_axis(),breaks = c(-2, -1, 0, 1, 2, 3, 4)) +
+  
+  #Legger til høydeforskjell på x aksen for å unngå overlapping
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))+
+  
+  
+  theme(axis.title.y=element_blank(),                #fjerne sidetekts på y
+        axis.title.x=element_blank(),                #fjerne sidetekst på x
+        panel.background = element_blank(),          #hvit bakgrunn
+        axis.line = element_line(colour = "black"))+ #lager svarte linjer rundt
+  #Lager tittel
+  labs(title="Timeverksproduktivitet, markedsrettede fastlandsnæringer")+
+  
+  
+  #legger til snittet i tekst over snittlinjene
+  annotate("text", x=3.5, y=3.5, label= "2.975 pst.") +
+  annotate("text", x=13, y=1.5, label= "0.973 pst.") +
+  annotate("text", x=20, y=1.2, label= "0.703 pst.")
+
+
+
+```
+
+**Står konklusjonen seg fortsatt idag?**
+
+Hvis vi ser på figuren ser vi at det ikke er økt timeverksproduktivitet men at den varierer en del fra år til år. den blir ikke like høy som den en gang har vært fra 1996 til 2004/2005, vi kan da konkludere med at det mest sansynelig ikke blir å øke så veldig mye heller siden gjennomsnittet har falt.
+
+Vi kan se at det er noe avvik fra tallene som ble brukt for å lage figur 1.1, men at det fortsatt viser ett tilnærmet resultat.
