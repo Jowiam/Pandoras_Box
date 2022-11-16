@@ -36,7 +36,7 @@ De heller nedover fordi de representerer to goder som konsumenten er indifferent
 
 **hvorfor nytten er størst når vi beveger oss i nordøstlig retning i figuren;**
 
-Fordi begge akser er postitive goder, gjør at jo lengre ut du kommer fra origo gjør at du får mere nytte av begge godene. Vi kan også se gjennomsnittet ved å tegne en stråle rett fra origo og ut til likevektspunktet. Som også kalles optimal tilpasning.
+Fordi begge akser er postitive goder, gjør at jo lengre ut du kommer fra origo gjør at du får mere nytte av begge godene.
 
 ***hvorfor indifferenskurvene ikke krysser.***
 
@@ -161,7 +161,7 @@ figur_2
 
 Den optimale tilpassningen er det punktet budsjettlinjen akkurat treffer indifferenskurven. Punktet der husholdningen får mest fra både konsum og mat.
 
-Husholdningen vil ha både høyere konsumgoder og mer mat, men begge deler er ikke mulig. Den kan gjøre A eller B, men ikke begge. MRT, helning til mulighetskurven kalles MRT, marginal transformasjonsbrøk. Helningen til kurven er større når vi går lenger ned. Så det koster husholdningen mer mat. Husholdningen må ta et valg som kjennetegnes ved tangeringspunktet. Tangeringspunktet er hvor marginal substitusjonsbrøk er lik MRT. Og er den optimale tilpasning.
+Husholdningen vil ha både høyere konsumgoder og mer mat, men begge deler er ikke mulig. Den kan gjøre A eller B, men ikke begge. Helning til mulighetskurven kalles MRT, marginal transformasjonsbrøk. Helningen til kurven er større når vi går lenger ned. Så det koster husholdningen mer konsumgoder. Husholdningen må ta et valg som kjennetegnes ved tangeringspunktet. Det optimale valget for husholdningen blir hvor MRT = MSB, hvor marginal transformasjonsbrøk er lik marginal substitusjonsbrøk. Dette er den blå prikken på figuren.
 
 ***Det viser seg at i en optimal tilpasning kjøper denne husholdningen 5100 enheter konsumgoder og 4250 enheter mat. Hvilken andel av husholdningens inntekt brukes på konsum og på mat?***
 
@@ -506,42 +506,47 @@ df_kpi <-  hent_indeks.tmp %>%
   as_tibble()
 ```
 
-*Lag en figur som viser utviklingen til disse vektene over tid. Gi figuren en passende tittel, benevning av aksene og legende. Kommentér figuren.*
+***Lag en figur som viser utviklingen til disse vektene over tid. Gi figuren en passende tittel, benevning av aksene og legende. Kommentér figuren.***
+
+Laster inn datasettet Konsumprisindeks med hovedgruppenivå matvarer og alkoholfrie drikkevarer (03013) fra SSB, dette er ikke relevant for utskrift.
 
 ```{r}
-df_kpi %>% 
-ggplot(aes(x=måned, y=value, group=1)) +
-  geom_line(color="red") +
-  theme_clean()+
-  theme(plot.title = element_text(size = 15, hjust = 0.48))+
-  labs(title="Matvarer og alkoholfrie drikkevarer",
-       x= "Måneder", y="Vekt") +
-  scale_y_continuous(breaks=seq(115,140, by=5))+
-
-  scale_x_discrete(guide = guide_axis(check.overlap = TRUE))
-```
-
-*Vi skal sammenlikne disse seriene. For å gjøre dette må du transformere den første serien (I) til årlige observasjoner (beskriv hvordan du velger å gjøre dette), og (II) til prosent (fra promille). Plott seriene på samme figur med passende tittel, benevning på aksene, og legende.*
-
-Separerer observasjoner fra 1991M1, 1991M2 og videre til to nye variabler med måneder og år. Tar å fjerner måned variablen siden den trenger vi ikke, så tar vi å grupperer og summerer gjennomsnittet til årene for å få de til årlige observasjoner. Til slutt tar vi å deler vektene på 10 for å få de til prosent fra promille.
-
-```{r}
-#Gjør om til år 
-
 df_kpi_1 <- df_kpi %>%
   separate(måned, into=c("year", "month"), sep="M") %>% # fjerner M1,M2 osv setter 
   mutate(dato = ymd(paste(year, month, "1"))) %>%  # de i ny tidsvariabel kalt dato
-  select(-month) 
-
-
-df_kpi_årlig <- df_kpi_1 %>% 
-  group_by(year) %>% # grupperer og summerer gjennomsnittet til årene
-  summarize(mean(value)) %>%
-  rename(årlig='mean(value)')
-  
-
-#Det vil naturlig være avvik på siste året da det er 9 måneder i det siste året #mens alle andre år har 12 måneder.
+  select(-month) # Fjerner måned variablen den trenger vi ikke
+# Bruker year videre for å plotte de årlig senere i oppgaven
 ```
+
+**Begynner å plotte figuren fra dato og verdien for**
+
+```{r}
+df_kpi_1 %>% 
+ggplot(aes(x=dato, y=value)) +
+  
+# Gjør fargen rød for å jobbe med den som rød videre
+geom_line(color="red") +
+  
+# Setter theme
+theme_fivethirtyeight() +
+  
+# Endrer på tittel størrelse og lager tittel og subtittel
+theme(plot.title = element_text(size = 15))+
+  labs(title="Matvarer og alkoholfrie drikkevarer", subtitle="År er plottet med måneder", caption="Basert på tabell 03013 fra SSB") +
+  scale_y_continuous(breaks=seq(115,140, by=5))+
+  
+# Siden theme_fivethirtyeight har fjernet titler til aksene må jeg legge de
+# inn igjen i theme
+theme(axis.title = element_text(), legend.text = element_text(size=8)) + 
+ylab("Vekter(promille)") + 
+xlab ("År")
+```
+
+Figuren viser månedlige Konsumprisindeks (KPI) vekter for matvarer og alkoholfrie drikkevarer. Disse vises i promille. For eksempel i år 2000 har vektene for matvarer og alkoholfrie drikkevarer en verdi på 122,3 promille. Dette vil si at av hele KPI tar hovedgruppen matvarer og alkoholfrie drikkevarer 122,3 promille av KPI, av totalt 1000 som KPI vektene i kurven skal summeres til. Man kan også se at siden 1999 har vektene til mat gått ned fra 139.1 til 122.3 promille. Som betyr at endring av hovedgruppen fra denne perioden var på 16,5 promille og at i KPI brukte befolkningen mer av budsjettet sitt på de andre hovedgruppene.
+
+***Vi skal sammenlikne disse seriene. For å gjøre dette må du transformere den første serien (I) til årlige observasjoner (beskriv hvordan du velger å gjøre dette), og (II) til prosent (fra promille). Plott seriene på samme figur med passende tittel, benevning på aksene, og legende.***
+
+Laster inn datasettet Forbrukerundersøkelsen med hovedgruppenivå matvarer og alkoholfrie drikkevarer (10235) fra SSB, dette er ikke relevant for utskrift.
 
 ```{r, echo=FALSE}
 
@@ -582,14 +587,9 @@ df_fbu <-  hent_indeks.tmp_2 %>%
   as_tibble()
 ```
 
+Grupperer og summerer gjennomsnittet til årene for å få de til årlige observasjoner. Til slutt tar vi å deler vektene på 10 for å få de til prosent fra promille.
+
 ```{r}
-#Gjør om til årlige observasjoner
-
-df_kpi_1 <- df_kpi %>%
-  separate(måned, into=c("year", "month"), sep="M") %>% # fjerner M1,M2 osv setter 
-  select(-month) # de til år
-
-
 df_kpi_årlig <- df_kpi_1 %>% 
   group_by(year, statistikkvariabel) %>% # grupperer og summerer gjennomsnittet til årene
   summarize(mean(value)) %>%
@@ -616,18 +616,19 @@ geom_line()+
 # Gjør prikkene svart
 geom_point(color="black")+
     
-
 # Gjør slik at årstallene ikke går over hverandre i x-aksen
 scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
     
 # Setter tema fra pakken ggthemes
-          theme_fivethirtyeight() +
+theme_fivethirtyeight() +
+  
 # Lager tittel og sier hvor data er hentet fra
-    labs(title="Utgifter til matvarer FBU og KPI",
+  labs(title="Utgifter til matvarer FBU og KPI",
          caption="Basert på tabell 03013 og 10235 fra SSB")+
 
 # Endrer fargene på seriene  
-scale_color_manual(name="Serier", values = c("cornflowerblue","red"))+
+scale_color_manual(name="Serier", values = c("cornflowerblue","red"),
+                   labels=c("Forbrukerundersøkelsen", "Konsumprisindeks"))+
 
 # Siden theme_fivethirtyeight har fjernet titler til aksene må jeg legge de
 # inn igjen i theme
@@ -638,23 +639,27 @@ xlab ("År")
 
 ***Hva viser figuren?***
 
-Den viser årlige Konsumprisindeks (KPI) vekter for matvarer og alkoholfrie drikkevarer (rød) mot Forbrukerundersøkelsens (FBU) andel av forbruksutgift for matvarer og alkoholfrie drikkevarer i prosent (blå).
+Den viser årlige KPI vekter for matvarer og alkoholfrie drikkevarer (rød) mot Forbrukerundersøkelsens (FBU) andel av forbruksutgift for matvarer og alkoholfrie drikkevarer i prosent (blå).
 
 ***Foreslå grunner til at disse to seriene avviker fra hverandre.***
 
 FBU er en undersøkelse som ble gjort av Statistisk sentralbyrå (SSB) frem til 2012 og var også grunnlaget for beregning av KPI frem til 2010. Vektene for KPI i figuren er beregnet med basisår 2015=100, mens FBU-serien baseres på løpende priser. Derfor avviker seriene før 2011, selv om FBU var grunnlaget for KPI i disse årene.
 
-FBU tok en liten andel av husholdninger og undersøkte konsum og priser ved hjelp av spørreskjema, dagbok, og kassalapper. I motsetning til dette baseres NR på kilder som strekkodedata.
+FBU tok en liten andel av husholdninger og undersøkte konsum og priser ved hjelp av spørreskjema, dagbok, og kassalapper. I motsetning til dette baseres Nasjonalregnskapets (NR) på kilder som strekkodedata. Mer om dette straks.
 
 ***Hvorfor gikk KPI-vektene for matvarer mye opp mellom 2010 og 2011?***
 
-Fra og med 2011 ble KPI utregnet med Nasjonalregnskapets (NR) tall fordi EU kom med en lovendring som gjorde at KPI-vektene ikke kunne regnes ut med talldata som er eldre enn 2 år. (Nytt i KPI, s.40) KPI regnet ut med FBU frem til da hadde på grunn av lavt datagrunnlag beregnet vektene fra gjennomsnittet over 3 år for å få de nye vektene.
+Fra og med 2011 ble KPI utregnet med NR tall fordi EU kom med en lovendring som gjorde at KPI-vektene ikke kunne regnes ut med talldata som er eldre enn 2 år. (Nytt i KPI, s.40) KPI regnet ut med FBU frem til da hadde på grunn av lavt datagrunnlag beregnet vektene fra gjennomsnittet over 3 år for å få de nye vektene.
 
-En annen grunn kan være at overgangen til NR som kilde gjorde at det også ble endringer i populasjonen som ble tatt med i indeksen. I FBU omfattes alle i alderen mellom 17 til 79 år med unntak av personer bosatt i institusjon. Med NR som vektkilde vil populasjonen endres til å i praksis inkludere alle personer. Og for vektene innebærer dette et økt forbruk av konsum med eldre beboere og beboere i institusjoner. Noe som kan gi en god forklaring på hvorfor KPI-vektene for matvarer gikk mye opp mellom 2010 og 2011.
+En annen grunn kan være at overgangen til NR som kilde gjorde at det også ble endringer i populasjonen som ble tatt med i indeksen. I FBU omfattes alle i alderen mellom 17 til 79 år med unntak av personer bosatt i institusjon. Med NR som vektkilde vil populasjonen endres til å i praksis inkludere alle personer. Og for vektene innebærer dette et økt forbruk av konsum i hovedgruppen matvarer og alkoholfrie drikkevarer med eldre beboere og beboere i institusjoner. Noe som kan gi en god forklaring på hvorfor KPI-vektene for matvarer gikk mye opp mellom 2010 og 2011.
 
-***Hvordan har disse vektene utviklet seg fra 2011, og hvorfor?***
+**Hvordan har disse vektene utviklet seg fra 2011, og hvorfor?**
 
-KPI-vektene til matvarer og alkoholfrie drikkevarer har hatt en svak nedgang fram til 2020. På grunn av Covid-19 har vektene til KPI økt på matvarer og alkoholfrie drikkevarer. Se på SSB angående covid.
+KPI-vektene til matvarer og alkoholfrie drikkevarer har hatt en nedgang og oppgang mellom 2011 og 2020. Det kan være mange årsaker til at vektene har endret seg. Det kan pekes på at styringsrenten er historisk lav i denne perioden. Klima påvirker også vektene fordi det kan oppstå produksjonsproblemer i sesonger med lite nedbør. Konsumenter bruker mere penger på andre konsumgrupper og dermed mindre på mat og alkoholfrie drikkevarer.
+
+Basert på internasjonale anbefalinger og nasjonale forhold, har Statistisk sentralbyrå (SSB) besluttet at vektene for både KPI og HKPI skal reflektere endringer i konsumet som har oppstått under pandemien. For KPI er det besluttet at vektene bygger på et gjennomsnitt av konsumet i 2019 og 2020. For HKPI, hvor SSB er bundet av EUs reguleringer, vil hele effekten av endret konsumsammensetning i 2020 påvirke vektene. (SSB, 2021)
+
+Ut fra avgjørelsen til SSB om å manuelt justere vektene under pandemien kan vi se at vektene på mat og alkoholfrie drikkevarer øker med ca en prosent fra start av pandemien til nå.
 
 # Oppgave 3
 
@@ -671,7 +676,7 @@ axes_2 <- ggplot(df, aes(x))+
     y="Konsumgoder")+
   
   theme(axis.title = element_text(size = 15),
-        plot.title = element_text(size = 15, hjust = 0.48),
+        plot.title = element_text(size = 13, hjust = 0.39),
         panel.background = element_blank(),          # hvit bakgrunn
         axis.line = element_line(colour = "black"))+ # sett inn akselinjer
   coord_fixed(ratio = 1)+ # lik skala for x og y aksen
@@ -691,8 +696,10 @@ figur_3 <- axes_2 +                                      #ny figur + kostnadslin
   
 bud_2 <- function(x) 8500-0.85*x                         #funksjon for ny matpris
   
+# Lager ny figur
 figur_4 <- figur_3+
-  
+  # Plotter budsjettlinje 1 og 2, gir de fargene lilla og svart
+  # legger av fargen rød til en senere budsjettlinje
   geom_function(df,fun=bud_1, mapping = aes(color = "før prisøkning"))+
   geom_function(df,fun=bud_2, mapping = aes(color = "etter prisøkning"))+
   scale_colour_manual("Budsjettlinjer", values = c( "purple","black","red"))
@@ -708,7 +715,7 @@ Den svarte linjen viser husholdningens tidligere nyttenivå, den lilla viser nyt
 ***Vis i figuren hvordan den totale nedgangen i husholdningens konsum av mat kan dekomponeres i en inntekts- og substitusjonseffekt.***
 
 ```{r}
-
+# Lager ny figur med linjer og prikker
 figur_5 <- figur_4 +
   geom_point(x = 4250, y = 5100)+
   geom_point(x = 4000, y = 5100)+
@@ -725,9 +732,10 @@ figur_5
 ***Myndighetene vurderer å kompensere husholdningen for prisøkningen på matvarer. Vis i figuren hvor mye inntekt husholdningen bør få tilført for å få det like bra som før prisøkningen. (Hint: ettersom prisen på konsumgoder er 1 kan dette beløpet vises i figuren som en vertikal avstand, dvs x konsumgoder koster x kr).***
 
 ```{r}
-
+# Lager den nye budsjettlinjen, med kompensasjon og gir den fargen rød fra 
+# tidligere kode
 bud_5 <- function(x) 8500-0.85*x+212.5
-  
+# Plotter siste punkt med budsjettlingen, punkter og linjer
 figur_6 <- figur_5+
   stat_function(df, fun=bud_5, mapping = aes(color = "med kompensasjon fra stat"))+
   geom_point(aes(x=4125, y=5200)) +
@@ -742,14 +750,14 @@ figur_6
 
 Substitusjonseffekten gjør at konsumenten velger kombinasjoner av goder i punkt C, i steden for A. konsumenteten får mer Konsumgoder og mindre av Mat. Da konsumgodene har blitt relativt billigere. Dette dersom de blir kompensert for prisøkningen. Dersom husholdningen skal opprettholde nyttenivået, må de bli kompensert med 212.5 kr i uken.
 
-Ved å regne ut Laspeyres indeks, får vi at økingen har gått fra 100 til 102,5. Det vil si en økning på 2,5 prosent. Sammenliknet med budsjettet husholdningen i dette eksempelet trenger, er det lite avvik, da budsjettet til familien må økes med tilnærmet det samme for å opprettholde samme nyttenivå.
+Ved å regne ut Laspeyres indeks, får vi at økingen har gått fra 100 til 102,5. Det vil si en økning på 2,5 prosent. Sammenliknet med budsjettet til husholdningen i dette eksempelet er det lite avvik, da budsjettet til familien må økes med tilnærmet det samme for å opprettholde samme nyttenivå.
 
 Laspeyres' indeks er en prisindeks med mengdene i basisåret som vekter, forholdstallet mellom det basisårets varemengder ville ha kostet i beregningsårets priser, og det de kostet i basisårets priser.
 
 (SNL, 2021)
 
 $$
-Laspeyres = \frac{prisen\ på\ en\ observert\ periode * standarår\ vekter}{standarår\ pris *standarår\ vekter} *100
+Laspeyres = \frac{Summen\ av\ [prisen\ på\ en\ observert\ periode * standarår\ vekter]}{Summen\ av\ [standarår\ pris *standarår\ vekter]} *100
 $$
 
 ***"Siktemålet med konsumprisindeksen (KPI) er å lage en levekostnadsindeks som skal gi svar på hvilken inntektskompensasjon som er nødvendig for at en gjennomsnittlig husholdning skal kunne opprettholde sin levestandard når prisen på varer og tjenester endres" ([Johannessen](https://www.ssb.no/priser-og-prisindekser/artikler-og-publikasjoner/_attachment/203142?_ts=1495b28c170), 2014; 13). Basert på dine svar til (ii) og (iii) hvor bra fungerer KPI som levekostnadsindeks?***
@@ -761,3 +769,9 @@ Det kan argumenteres for at KPI fungerer som en levekostnadsindeks. Når vi samm
 SNL. (2021, 20. desember). \*Laspeyres' indeks.\* https://snl.no/Laspeyres%27_indeks
 
 SSB. (Johannesen, 2014; 13). \*Priser og prisindekser.\* https://www.ssb.no/priser-og-prisindekser/artikler-og-publikasjoner/\_attachment/203142?\_ts=1495b28c170
+
+*Nytt I Konsumprisindeksen - SSB* (ingen dato). Tilgjengelig på:
+
+https://www.ssb.no/a/publikasjoner/pdf/oa_201004/johannessen.pdf (Sist besøkt: November 16, 2022).
+
+SSB. (Johannesen, 2021; 02. Februar). \*Vekter for KPI og HKPI 2021\* https://www.ssb.no/priser-og-prisindekser/artikler-og-publikasjoner/vekter-for-kpi-og-hkpi-2021
