@@ -121,11 +121,12 @@ B = 8500
 $$
 
 $$
-k = -P_m/P_k*m+B/p_k
+k = 
+\frac{-P_m}{P_k}*m+\frac{B}{P_k}
 $$
 
 $$
-8500-0.8*x
+k=8500-0.8*m
 $$
 
 ***Hva er helningen til budsjettlinjen, og hvordan tolkes denne?***
@@ -133,7 +134,7 @@ $$
 Rent matematisk kan det skrives som;
 
 $$
--(P_m/P_k)= -0.8
+\frac{-P_m}{P_k}= -0.8
 $$
 
 Helningen til budsjettlinjen er prisen av mat målt i enheter delt på prisen av konsum
@@ -505,9 +506,7 @@ df_kpi <-  hent_indeks.tmp %>%
   as_tibble()
 ```
 
-***Lag en figur som viser utviklingen til disse vektene over tid. Gi figuren en passende tittel, benevning av aksene og legende. Kommentér figuren.***
-
-"Kommenter figuren her"
+*Lag en figur som viser utviklingen til disse vektene over tid. Gi figuren en passende tittel, benevning av aksene og legende. Kommentér figuren.*
 
 ```{r}
 df_kpi %>% 
@@ -525,6 +524,24 @@ ggplot(aes(x=måned, y=value, group=1)) +
 *Vi skal sammenlikne disse seriene. For å gjøre dette må du transformere den første serien (I) til årlige observasjoner (beskriv hvordan du velger å gjøre dette), og (II) til prosent (fra promille). Plott seriene på samme figur med passende tittel, benevning på aksene, og legende.*
 
 Separerer observasjoner fra 1991M1, 1991M2 og videre til to nye variabler med måneder og år. Tar å fjerner måned variablen siden den trenger vi ikke, så tar vi å grupperer og summerer gjennomsnittet til årene for å få de til årlige observasjoner. Til slutt tar vi å deler vektene på 10 for å få de til prosent fra promille.
+
+```{r}
+#Gjør om til år 
+
+df_kpi_1 <- df_kpi %>%
+  separate(måned, into=c("year", "month"), sep="M") %>% # fjerner M1,M2 osv setter 
+  mutate(dato = ymd(paste(year, month, "1"))) %>%  # de i ny tidsvariabel kalt dato
+  select(-month) 
+
+
+df_kpi_årlig <- df_kpi_1 %>% 
+  group_by(year) %>% # grupperer og summerer gjennomsnittet til årene
+  summarize(mean(value)) %>%
+  rename(årlig='mean(value)')
+  
+
+#Det vil naturlig være avvik på siste året da det er 9 måneder i det siste året #mens alle andre år har 12 måneder.
+```
 
 ```{r, echo=FALSE}
 
@@ -583,7 +600,6 @@ df_kpi_årlig <- df_kpi_1 %>%
 # Legger datasettene sammen for å plotte de
 
 df_plot <- rbind(df_kpi_årlig, df_fbu)
-  
 ```
 
 **Plotter seriene på samme figur**
@@ -642,11 +658,11 @@ KPI-vektene til matvarer og alkoholfrie drikkevarer har hatt en svak nedgang fra
 
 # Oppgave 3
 
-**Vi skal se på effekten av en prisøkning på matvarer på husholdningens tilpasning.**
+Vi skal se på effekten av en prisøkning på matvarer på husholdningens tilpasning.
 
 **Oppgave 3a**
 
-*Husholdningen fra oppgave 1 merker at prisen på mat øker fra 0,80 kr til 0,85 kr per enhet. Tegn en figur som viser den gamle og den nye tilpasningen. For å tegne figuren i R kan det være nyttig å vite at husholdningen kjøper nå 5100 enheter konsumgoder og 4000 enheter mat i den nye tilpasningen. Lag en ryddig figur som består av to indifferenskurver og to budsjettlinjer, og merk den gamle og den nye tilpasningen i figuren.*
+***Husholdningen fra oppgave 1 merker at prisen på mat øker fra 0,80 kr til 0,85 kr per enhet. Tegn en figur som viser den gamle og den nye tilpasningen. For å tegne figuren i R kan det være nyttig å vite at husholdningen kjøper nå 5100 enheter konsumgoder og 4000 enheter mat i den nye tilpasningen. Lag en ryddig figur som består av to indifferenskurver og to budsjettlinjer, og merk den gamle og den nye tilpasningen i figuren.***
 
 ```{r}
 axes_2 <- ggplot(df, aes(x))+
@@ -660,8 +676,7 @@ axes_2 <- ggplot(df, aes(x))+
         axis.line = element_line(colour = "black"))+ # sett inn akselinjer
   coord_fixed(ratio = 1)+ # lik skala for x og y aksen
   scale_x_continuous(limits = c(3000, 6000), expand = c(0, 0))+
-  scale_y_continuous(limits = c(3000, 6000), expand = c(0, 0)) # begrense aksene
-# og sikre at akselinjene møttes i (0,0).
+  scale_y_continuous(limits = c(3000, 6000), expand = c(0, 0))
 
 
 #lager en ny isokostnadslinje
@@ -669,9 +684,7 @@ I_4 <- function(x) (4627^(5/3))/x^(2/3)
 
 
 figur_3 <- axes_2 +                                      #ny figur + kostnadslinje
-  stat_function(df, fun=I_1, mapping = aes()) +          #regnet ut likepunkt med
-                                                         #lagrange for I_4
-  
+  stat_function(df, fun=I_1, mapping = aes()) +                                                               
   stat_function(df, fun=I_4, mapping = aes())
 
 
@@ -679,21 +692,20 @@ figur_3 <- axes_2 +                                      #ny figur + kostnadslin
 bud_2 <- function(x) 8500-0.85*x                         #funksjon for ny matpris
   
 figur_4 <- figur_3+
-  stat_function(df,fun=bud_1, mapping = aes())+          #tidligere budsjettlinje
-  stat_function(df,fun=bud_2, mapping = aes(color = "red"))          #ny budsjettlinje
   
-#  annotate("text",x=7300,y=3200, label="gammel pris")+   #beskrivelse i tekst
-  
-#  annotate("text",x=6000,y=3200, label="ny pris")
+  geom_function(df,fun=bud_1, mapping = aes(color = "før prisøkning"))+
+  geom_function(df,fun=bud_2, mapping = aes(color = "etter prisøkning"))+
+  scale_colour_manual("Budsjettlinjer", values = c( "purple","black","red"))
+
 
 figur_4
-
-
 ```
+
+Den svarte linjen viser husholdningens tidligere nyttenivå, den lilla viser nyttenivået fra samme budsjett, men med tilpassningen ut fra de nye prisene for mat.
 
 **Oppgave 3b**
 
-*Vis i figuren hvordan den totale nedgangen i husholdningens konsum av mat kan dekomponeres i en inntekts- og substitusjonseffekt.*
+***Vis i figuren hvordan den totale nedgangen i husholdningens konsum av mat kan dekomponeres i en inntekts- og substitusjonseffekt.***
 
 ```{r}
 
@@ -704,21 +716,48 @@ figur_5 <- figur_4 +
   geom_segment(aes(x=4000,xend=4000,y=3000,yend=5100), size=0.1, linetype="dashed") +
   geom_segment(aes(x=3000,xend=4250,y=5100,yend=5100), size=0.1, linetype="dashed") +
   geom_segment(aes(x=3000,xend=4000,y=5100,yend=5100), size=0.1, linetype="dashed") +
-  labs(legend = "rød = nypris")+
-  annotate("text",x=4080,y=5170, label="A")+
-  annotate("text",x=4350,y=5170, label="B")
+  annotate("text",x=3940,y=5000, label="B")+
+  annotate("text",x=4350,y=5170, label="A")
  
 figur_5
 ```
 
-*Myndighetene vurderer å kompensere husholdningen for prisøkningen på matvarer. Vis i figuren hvor mye inntekt husholdningen bør få tilført for å få det like bra som før prisøkningen. (Hint: ettersom prisen på konsumgoder er 1 kan dette beløpet vises i figuren som en vertikal avstand, dvs x konsumgoder koster x kr).*
-
-A -\> B er den totale effekten
+***Myndighetene vurderer å kompensere husholdningen for prisøkningen på matvarer. Vis i figuren hvor mye inntekt husholdningen bør få tilført for å få det like bra som før prisøkningen. (Hint: ettersom prisen på konsumgoder er 1 kan dette beløpet vises i figuren som en vertikal avstand, dvs x konsumgoder koster x kr).***
 
 ```{r}
 
+bud_5 <- function(x) 8500-0.85*x+212.5
+  
+figur_6 <- figur_5+
+  stat_function(df, fun=bud_5, mapping = aes(color = "med kompensasjon fra stat"))+
+  geom_point(aes(x=4125, y=5200)) +
+  geom_segment(aes(x=4125, y=3000, xend=4125, yend=5200), linetype="dashed") +
+  geom_segment(aes(x=3000, y=5200, xend=4125, yend=5200), linetype="dashed") +
+  annotate("text",x=4125,y=5350, label="C") 
+  
+figur_6
 ```
 
-*I Case 3 har dere sett hvordan KPI beregnes, og dette er også diskutert i [Johannessen](https://www.ssb.no/priser-og-prisindekser/artikler-og-publikasjoner/_attachment/203142?_ts=1495b28c170) (2014) (avsnitt som heter "Et teoretisk utgangspunkt") og [Langer og Johannessen](https://www.ssb.no/a/publikasjoner/pdf/oa_201004/johannessen.pdf) (2010) side 41. Man legger til grunn en versjon av en Laspeyres indeks. Beskriv med ord hvordan en Laspeyres indeks settes sammen. Vis i din figur fra 3b(ii) hvor mye inntekt husholdningen ville få fra myndighetene om denne metoden legges til grunn. Hva antas om substitusjonseffekten her?*
+***I Case 3 har dere sett hvordan KPI beregnes, og dette er også diskutert i [Johannessen](https://www.ssb.no/priser-og-prisindekser/artikler-og-publikasjoner/_attachment/203142?_ts=1495b28c170) (2014) (avsnitt som heter "Et teoretisk utgangspunkt") og [Langer og Johannessen](https://www.ssb.no/a/publikasjoner/pdf/oa_201004/johannessen.pdf) (2010) side 41. Man legger til grunn en versjon av en Laspeyres indeks. Beskriv med ord hvordan en Laspeyres indeks settes sammen. Vis i din figur fra 3b(ii) hvor mye inntekt husholdningen ville få fra myndighetene om denne metoden legges til grunn. Hva antas om substitusjonseffekten her?***
 
-*"Siktemålet med konsumprisindeksen (KPI) er å lage en levekostnadsindeks som skal gi svar på hvilken inntektskompensasjon som er nødvendig for at en gjennomsnittlig husholdning skal kunne opprettholde sin levestandard når prisen på varer og tjenester endres" ([Johannessen](https://www.ssb.no/priser-og-prisindekser/artikler-og-publikasjoner/_attachment/203142?_ts=1495b28c170), 2014; 13). Basert på dine svar til (ii) og (iii) hvor bra fungerer KPI som levekostnadsindeks?*
+Substitusjonseffekten gjør at konsumenten velger kombinasjoner av goder i punkt C, i steden for A. konsumenteten får mer Konsumgoder og mindre av Mat. Da konsumgodene har blitt relativt billigere. Dette dersom de blir kompensert for prisøkningen. Dersom husholdningen skal opprettholde nyttenivået, må de bli kompensert med 212.5 kr i uken.
+
+Ved å regne ut Laspeyres indeks, får vi at økingen har gått fra 100 til 102,5. Det vil si en økning på 2,5 prosent. Sammenliknet med budsjettet husholdningen i dette eksempelet trenger, er det lite avvik, da budsjettet til familien må økes med tilnærmet det samme for å opprettholde samme nyttenivå.
+
+Laspeyres' indeks er en prisindeks med mengdene i basisåret som vekter, forholdstallet mellom det basisårets varemengder ville ha kostet i beregningsårets priser, og det de kostet i basisårets priser.
+
+(SNL, 2021)
+
+$$
+Laspeyres = \frac{prisen\ på\ en\ observert\ periode * standarår\ vekter}{standarår\ pris *standarår\ vekter} *100
+$$
+
+***"Siktemålet med konsumprisindeksen (KPI) er å lage en levekostnadsindeks som skal gi svar på hvilken inntektskompensasjon som er nødvendig for at en gjennomsnittlig husholdning skal kunne opprettholde sin levestandard når prisen på varer og tjenester endres" ([Johannessen](https://www.ssb.no/priser-og-prisindekser/artikler-og-publikasjoner/_attachment/203142?_ts=1495b28c170), 2014; 13). Basert på dine svar til (ii) og (iii) hvor bra fungerer KPI som levekostnadsindeks?***
+
+Det kan argumenteres for at KPI fungerer som en levekostnadsindeks. Når vi sammenlikner svarene vi får når vi regner prosentvis økning og utregning av Laspeyres-indeks, ser vi en klar sammenheng. Det viser at det er fullt mulig å bruke KPI som levekostnads indeks i tilfeller der vi ser på mat og forbruker konsum.
+
+### KILDER:
+
+SNL. (2021, 20. desember). \*Laspeyres' indeks.\* https://snl.no/Laspeyres%27_indeks
+
+SSB. (Johannesen, 2014; 13). \*Priser og prisindekser.\* https://www.ssb.no/priser-og-prisindekser/artikler-og-publikasjoner/\_attachment/203142?\_ts=1495b28c170
