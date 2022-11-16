@@ -532,7 +532,8 @@ theme_fivethirtyeight() +
   
 # Endrer på tittel størrelse og lager tittel og subtittel
 theme(plot.title = element_text(size = 15))+
-  labs(title="Matvarer og alkoholfrie drikkevarer", subtitle="År er plottet med måneder", caption="Basert på tabell 03013 fra SSB") +
+  labs(title="Matvarer og alkoholfrie drikkevarer", subtitle="År er plottet med måneder",
+       caption="Basert på tabell 03013 fra SSB") +
   scale_y_continuous(breaks=seq(115,140, by=5))+
   
 # Siden theme_fivethirtyeight har fjernet titler til aksene må jeg legge de
